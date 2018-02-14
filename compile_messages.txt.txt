@@ -1,0 +1,28 @@
+17:58:30 **** Build of configuration Debug for project msRecal ****
+make all 
+Building file: ../src/StringFunctions.c
+Invoking: Cygwin C Compiler
+gcc -I"C:\Users\atguler\eclipse-workspace\pepXMLLib\src" -I"C:\Users\atguler\eclipse-workspace\mzXMLLib\src" -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/StringFunctions.d" -MT"src/StringFunctions.o" -o "src/StringFunctions.o" "../src/StringFunctions.c"
+Finished building: ../src/StringFunctions.c
+ 
+Building file: ../src/msRecal.c
+Invoking: Cygwin C Compiler
+gcc -I"C:\Users\atguler\eclipse-workspace\pepXMLLib\src" -I"C:\Users\atguler\eclipse-workspace\mzXMLLib\src" -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/msRecal.d" -MT"src/msRecal.o" -o "src/msRecal.o" "../src/msRecal.c"
+../src/msRecal.c: In function 'print_state':
+../src/msRecal.c:140:19: warning: format '%u' expects argument of type 'unsigned int', but argument 2 has type 'size_t {aka long unsigned int}' [-Wformat=]
+  printf ("iter: %3u x = %15.8f %15.8f " "|f(x)| = %g\n", iter, gsl_vector_get (s->x, 0), gsl_vector_get (s->x, 1), gsl_blas_dnrm2 (s->f));
+                   ^
+../src/msRecal.c: In function 'recalibratePeaks':
+../src/msRecal.c:553:9: warning: variable 'chi' set but not used [-Wunused-but-set-variable]
+  double chi;
+         ^~~
+Finished building: ../src/msRecal.c
+ 
+Building target: msRecal.exe
+Invoking: Cygwin C Linker
+gcc -L"C:\Users\atguler\eclipse-workspace\pepXMLLib\Release" -L"C:\Users\atguler\eclipse-workspace\mzXMLLib\Release" -o "msRecal.exe"  ./src/StringFunctions.o ./src/msRecal.o   -lgsl -lgslcblas -lpepXMLLib -lmzXMLLib
+Finished building target: msRecal.exe
+ 
+
+17:58:33 Build Finished (took 2s.996ms)
+
