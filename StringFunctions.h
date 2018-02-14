@@ -1,9 +1,8 @@
-#ifndef __XML_STRING_FUNCTIONS_H__
-#define __XML_STRING_FUNCTIONS_H__
+#ifndef STRINGFUNCTIONS_H
+#define	STRINGFUNCTIONS_H
 
-#ifdef __cplusplus
-extern "C"
-{
+#ifdef	__cplusplus
+extern "C" {
 #endif
 
 /* Returns the first position of the substring in the string */
@@ -15,8 +14,10 @@ int strnpos(char* str, char* substr, int window);
 /* Clones a string */
 char* strclone(char* src);
 
-#ifdef __cplusplus
+
+#ifdef	__cplusplus
 }
 #endif
 
-#endif
+#endif	/* STRINGFUNCTIONS_H */
+

@@ -1,28 +1,46 @@
-17:58:30 **** Build of configuration Debug for project msRecal ****
+18:09:36 **** Build of configuration Debug for project msRecal ****
 make all 
 Building file: ../src/StringFunctions.c
 Invoking: Cygwin C Compiler
 gcc -I"C:\Users\atguler\eclipse-workspace\pepXMLLib\src" -I"C:\Users\atguler\eclipse-workspace\mzXMLLib\src" -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/StringFunctions.d" -MT"src/StringFunctions.o" -o "src/StringFunctions.o" "../src/StringFunctions.c"
 Finished building: ../src/StringFunctions.c
  
-Building file: ../src/msRecal.c
+Building file: ../src/generalFunctions.c
 Invoking: Cygwin C Compiler
-gcc -I"C:\Users\atguler\eclipse-workspace\pepXMLLib\src" -I"C:\Users\atguler\eclipse-workspace\mzXMLLib\src" -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/msRecal.d" -MT"src/msRecal.o" -o "src/msRecal.o" "../src/msRecal.c"
-../src/msRecal.c: In function 'print_state':
-../src/msRecal.c:140:19: warning: format '%u' expects argument of type 'unsigned int', but argument 2 has type 'size_t {aka long unsigned int}' [-Wformat=]
-  printf ("iter: %3u x = %15.8f %15.8f " "|f(x)| = %g\n", iter, gsl_vector_get (s->x, 0), gsl_vector_get (s->x, 1), gsl_blas_dnrm2 (s->f));
-                   ^
-../src/msRecal.c: In function 'recalibratePeaks':
-../src/msRecal.c:553:9: warning: variable 'chi' set but not used [-Wunused-but-set-variable]
+gcc -I"C:\Users\atguler\eclipse-workspace\pepXMLLib\src" -I"C:\Users\atguler\eclipse-workspace\mzXMLLib\src" -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/generalFunctions.d" -MT"src/generalFunctions.o" -o "src/generalFunctions.o" "../src/generalFunctions.c"
+../src/generalFunctions.c: In function 'initParameters':
+../src/generalFunctions.c:136:6: warning: unused variable 'i' [-Wunused-variable]
+  int i;
+      ^
+Finished building: ../src/generalFunctions.c
+ 
+Building file: ../src/main.c
+Invoking: Cygwin C Compiler
+gcc -I"C:\Users\atguler\eclipse-workspace\pepXMLLib\src" -I"C:\Users\atguler\eclipse-workspace\mzXMLLib\src" -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/main.d" -MT"src/main.o" -o "src/main.o" "../src/main.c"
+../src/main.c: In function 'main':
+../src/main.c:29:17: warning: unused variable 'k' [-Wunused-variable]
+     int pepnum, k;
+                 ^
+Finished building: ../src/main.c
+ 
+Building file: ../src/recalFunctions.c
+Invoking: Cygwin C Compiler
+gcc -I"C:\Users\atguler\eclipse-workspace\pepXMLLib\src" -I"C:\Users\atguler\eclipse-workspace\mzXMLLib\src" -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/recalFunctions.d" -MT"src/recalFunctions.o" -o "src/recalFunctions.o" "../src/recalFunctions.c"
+../src/recalFunctions.c: In function 'build_internal_calibrants':
+../src/recalFunctions.c:210:24: warning: too many arguments for format [-Wformat-extra-args]
+                 printf("%i\t%s\tRT:%f\n", k+1, peptide_set[candidate_list[j-1][k]].sequence, peptide_set[candidate_list[j-1][k]].retention, peptide_set[candidate_list[j-1][k]]); fflush(stdout);
+                        ^~~~~~~~~~~~~~~~~
+../src/recalFunctions.c: In function 'recalibratePeaks':
+../src/recalFunctions.c:383:9: warning: variable 'chi' set but not used [-Wunused-but-set-variable]
   double chi;
          ^~~
-Finished building: ../src/msRecal.c
+Finished building: ../src/recalFunctions.c
  
 Building target: msRecal.exe
 Invoking: Cygwin C Linker
-gcc -L"C:\Users\atguler\eclipse-workspace\pepXMLLib\Release" -L"C:\Users\atguler\eclipse-workspace\mzXMLLib\Release" -o "msRecal.exe"  ./src/StringFunctions.o ./src/msRecal.o   -lgsl -lgslcblas -lpepXMLLib -lmzXMLLib
+gcc -L"C:\Users\atguler\eclipse-workspace\pepXMLLib\Release" -L"C:\Users\atguler\eclipse-workspace\mzXMLLib\Release" -o "msRecal.exe"  ./src/StringFunctions.o ./src/generalFunctions.o ./src/main.o ./src/recalFunctions.o   -lgsl -lgslcblas -lpepXMLLib -lmzXMLLib
 Finished building target: msRecal.exe
  
 
-17:58:33 Build Finished (took 2s.996ms)
+18:09:42 Build Finished (took 5s.45ms)
 

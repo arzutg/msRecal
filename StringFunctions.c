@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <stdio.h>
-//#include <math.h>
 #include <string.h>
 
 #include "StringFunctions.h"
@@ -35,7 +34,12 @@ int strnpos(char* str, char* substr, int window)
 char* strclone(char* src)
 {
 	char* retval = (char*) malloc((strlen(src)+1) * sizeof(char));
+	if (!retval) {
+		printf("Error: Memory allocation for string cloning of %s failed.\n", src); fflush(stdout);		
+	}// if
 	strcpy(retval, src);
 	return retval;
 
 }/* char* strclone(char* src) */
+
+
