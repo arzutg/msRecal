@@ -136,22 +136,22 @@ void initParameters(msrecal_params* params)
 	int i;
 
 	params->mzxml_file = NULL;
-        params->pepxml_file = NULL;
+    params->pepxml_file = NULL;
 	params->output_mzXML_file = NULL;
 	params->score_name = "N/A";
 
-	params->ms_start_scan = 1;
-	params->ms_end_scan = INT_MAX;		
+	params->ms_start_scan = DEFAULT_START_SCAN;
+	params->ms_end_scan = INT_MAX;
 
 	params->crop = DEFAULT_MODE;
 	params->min_cal = DEFAULT_MIN_CALIBRANTS;
 	params->bg = DEFAULT_MIN_INTENSITY;
 
-	params->lower_rel_bnd_rt = 60;
-	params->upper_rel_bnd_rt = 120;
+	params->lower_rel_bnd_rt = DEFAULT_REL_L_BND_RT;
+	params->upper_rel_bnd_rt = DEFAULT_REL_H_BND_RT;
 	params->recal_offset = 0;
 	
-	params->mmme = 5/1000000;				
+	params->mmme = DEFAULT_MMME;
 	params->min_score_threshold = DBL_MIN;
 	params->max_score_threshold = DBL_MAX;
 	

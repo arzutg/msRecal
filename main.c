@@ -35,6 +35,7 @@ int main(int argc, char *argv[]) {
     printf("\n>>Parameters being initialized..");
     params = readParameters(argc, argv);
     if (!params){
+    printf("\nMissing parameters! See below..\n");
 	showHelp();
         return -1;
     }
@@ -78,28 +79,29 @@ int main(int argc, char *argv[]) {
     peptide_set = build_peptide_set(pepXML_file, params, &pepnum);
     printf("\n%i peptides that are potential calibrants.\n", pepnum); fflush(stdout);	
     printf("done.\n" ); fflush(stdout); //CH1
-    
+
     //Reading mzXML file
     printf("\n>>Reading mzXML file %s...",params->mzxml_file); fflush(stdout);
-    mzXML_file = read_mzxml_file_spectrum(params->mzxml_file, 1, 0, params->ms_start_scan, params->ms_end_scan);
+    mzXML_file = read_mzxml_file_spectrum(params->mzxml_file, 1, 0, &params->ms_start_scan, &params->ms_end_scan);
     if (mzXML_file == NULL) {
 	printf("error opening mzXML file\n"); fflush(stdout);
 	return -1;
     }
+
     printf("\nManufacturer: %s", mzXML_file->msinstrument_array->mm_value); fflush(stdout);
     printf("\nModel: %s", mzXML_file->msinstrument_array->mod_value); fflush(stdout);
     printf("\nMass analyzer: %s", mzXML_file->msinstrument_array->ma_value); fflush(stdout);
     printf("\nScan count: %i", mzXML_file->ms_scan_count); fflush(stdout);
-    //Crashes in next line, for FTICR
-    printf("\n%i MS scans\n", params->ms_end_scan - params->ms_start_scan + 1); fflush(stdout); 
-    printf("\n%i MS scans to be calibrated within the scan window: [%i, %i]\n", params->ms_end_scan - params->ms_start_scan + 1 , mzXML_file->scan_id_array[params->ms_start_scan-1], mzXML_file->scan_id_array[params->ms_end_scan-1]); fflush(stdout); 
-    printf("done.\n" ); fflush(stdout); //CH2
-    
+    printf("\n%i MS scans to be calibrated within the scan window: [%i, %i]\n", params->ms_end_scan - params->ms_start_scan + 1 , mzXML_file->scan_id_array[params->ms_start_scan-1], mzXML_file->scan_id_array[params->ms_end_scan-1]); fflush(stdout);
+    printf("\ndone.\n" ); fflush(stdout); //CH2
+
     printf("\n>>Making internal calibrant candidate list for each scan within the retention time window...\n"); fflush(stdout);
+
     build_internal_calibrants(mzXML_file, peptide_set, pepnum, params);
+
     //check the print within this function
     printf("done.\n"); fflush(stdout); //CH3
-     
+
     printf("\n>>Constructing the final calibrant list for each scan and recalibrating the peaks..."); fflush(stdout);
 
     //for each scan
