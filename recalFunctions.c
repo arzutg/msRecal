@@ -165,51 +165,55 @@ void build_internal_calibrants(pmzxml_file mzXML_file, peptideset* peptide_set, 
 	int i, j, k, unique;
 	double min_rt, max_rt;
 	scan_attributes satt;
-        
-        scan_window = (params->ms_end_scan - params->ms_start_scan)+1;
-        numberof_cal_ms_scan = (int*) malloc(sizeof(int) * scan_window);
 
-        //for each mzxml scan
-	for (i=0; i<scan_window; i++) 
+    scan_window = (params->ms_end_scan - params->ms_start_scan)+1;
+    numberof_cal_ms_scan = (int*) malloc(sizeof(int) * scan_window);
+
+    //for each mzxml scan
+	for (i=0; i<scan_window; i++)
 		numberof_cal_ms_scan[i]=0;
 
-	for(i=0; i<set_size; i++) {
-            min_rt = (peptide_set[i].retention + params->recal_offset) - params->lower_rel_bnd_rt;
-            max_rt = (peptide_set[i].retention + params->recal_offset) + params->upper_rel_bnd_rt;
+	printf("\nCH 1"); fflush(stdout);
+	printf("\nset size: %i", set_size); fflush(stdout);
 
-            for(j=params->ms_start_scan; j<=params->ms_end_scan; j++) {           
-                satt = get_scan_attributes(mzXML_file, j);
-                        
-                if (satt.retentionTime < min_rt){
-                    continue;
-                }
-                else if (satt.retentionTime > max_rt){ 
+	for(i=0; i<set_size; i++) {
+		min_rt = (peptide_set[i].retention + params->recal_offset) - params->lower_rel_bnd_rt;
+        max_rt = (peptide_set[i].retention + params->recal_offset) + params->upper_rel_bnd_rt;
+
+        for(j=params->ms_start_scan; j<=params->ms_end_scan; j++) {
+        	satt = get_scan_attributes(mzXML_file, j);
+
+            if (satt.retentionTime < min_rt){
+            	continue;
+            }
+            else if (satt.retentionTime > max_rt){
+                break;
+            }
+
+            unique = 1;
+            // Check if the same sequence isn't already in the list for this spectrum
+            for (k=0; k<numberof_cal_ms_scan[j-(params->ms_start_scan)]; k++) {
+            	if (strcmp(peptide_set[candidate_list[j-1][k]].sequence, peptide_set[i].sequence) == 0) {
+                	unique = 0;
                     break;
                 }
-                
-                unique = 1;
-                // Check if the same sequence isn't already in the list for this spectrum 
-                for (k=0; k<numberof_cal_ms_scan[j-(params->ms_start_scan)]; k++) {
-                    if (strcmp(peptide_set[candidate_list[j-1][k]].sequence, peptide_set[i].sequence) == 0) {
-                        unique = 0;
-                        break;
-                    }			
-                }
+            }
 
-                if (unique) {
-                    //copy peptide index to internal calibrant candidate lists for nearby MS spectra... [mzscannumber][calibrantno]*/
-                    candidate_list[j-1][numberof_cal_ms_scan[j-(params->ms_start_scan)]] = i; 				
-                    numberof_cal_ms_scan[j-(params->ms_start_scan)]++; // number of calibrants for one ms scan
-                }
+            if (unique) {
+            	//copy peptide index to internal calibrant candidate lists for nearby MS spectra... [mzscannumber][calibrantno]*/
+                candidate_list[j-1][numberof_cal_ms_scan[j-(params->ms_start_scan)]] = i;
+                numberof_cal_ms_scan[j-(params->ms_start_scan)]++; // number of calibrants for one ms scan
             }
         }
+    }
         
-        for(j=params->ms_start_scan; j<=params->ms_end_scan; j++) {
-            printf("\nMS scan: %i\tRT:%f\tBase peak mz:%f\n", mzXML_file->scan_id_array[j-1], get_scan_attributes(mzXML_file, j).retentionTime, get_scan_attributes(mzXML_file, j).basePeakMz); fflush(stdout);
-            for(k=0; k<numberof_cal_ms_scan[j-(params->ms_start_scan)]; k++) {
-                printf("%i\t%s\tRT:%f\n", k+1, peptide_set[candidate_list[j-1][k]].sequence, peptide_set[candidate_list[j-1][k]].retention, peptide_set[candidate_list[j-1][k]]); fflush(stdout);
-            }  
+    for(j=params->ms_start_scan; j<=params->ms_end_scan; j++) {
+    	printf("\nMS scan: %i\tRT:%f\tBase peak mz:%f\n", mzXML_file->scan_id_array[j-1], get_scan_attributes(mzXML_file, j).retentionTime, get_scan_attributes(mzXML_file, j).basePeakMz); fflush(stdout);
+        printf("\n%i\t%f", mzXML_file->scan_id_array[j-1], get_scan_attributes(mzXML_file, j).retentionTime); fflush(stdout);
+        for(k=0; k<numberof_cal_ms_scan[j-(params->ms_start_scan)]; k++) {
+        	printf("%i\t%s\tRT:%f\n", k+1, peptide_set[candidate_list[j-1][k]].sequence, peptide_set[candidate_list[j-1][k]].retention, peptide_set[candidate_list[j-1][k]]); fflush(stdout);
         }
+    }
 }
 
 /* Monisotopic mass calculator */
@@ -272,8 +276,8 @@ void makeCalibrantList(int scan, pscan_peaks mzpeaks, peptideset* peptide_set, m
                     //calculate the theoretical mass of the peptide
                     mz = calc_mass(peptide_set[candidate_list[scan-1][j]].sequence, z);
                     if(fabs((mz - mzpeaks->mzs[i])/mz)<=params->mmme) {	
-                        printf("\n\t-Peak %i: \t\tmass= %f \tintensity= %f", i, mzpeaks->mzs[i], mzpeaks->intensities[i] ); fflush(stdout);
-                        printf("\n\t\tPeptide \tmass= %f", mz); fflush(stdout);
+                        //printf("\n\t-Peak %i: \t\tmass= %f \tintensity= %f", i, mzpeaks->mzs[i], mzpeaks->intensities[i] ); fflush(stdout);
+                        //printf("\n\t\tPeptide \tmass= %f", mz); fflush(stdout);
 			calibrant_list[n_calibrants].mz = mz;
 			calibrant_list[n_calibrants].peak = mzpeaks->mzs[i];
 			calibrant_list[n_calibrants].intensity = mzpeaks->intensities[i];
@@ -285,8 +289,8 @@ void makeCalibrantList(int scan, pscan_peaks mzpeaks, peptideset* peptide_set, m
 		if(z==1) { // all cyclosiloxanes are singly charged
                     for(j=0; j<5; j++) {
 			if(fabs((cyclosiloxanes[j] - mzpeaks->mzs[i])/ cyclosiloxanes[j]) <= params->mmme) {
-                            printf("\n\t-Peak %i: \t\tmass= %f \tintensity= %f", i, mzpeaks->mzs[i], mzpeaks->intensities[i] ); fflush(stdout);
-                            printf("\n\t\tCyclosiloxane \tmass= %f", cyclosiloxanes[j]); fflush(stdout);
+                            //printf("\n\t-Peak %i: \t\tmass= %f \tintensity= %f", i, mzpeaks->mzs[i], mzpeaks->intensities[i] ); fflush(stdout);
+                            //printf("\n\t\tCyclosiloxane \tmass= %f", cyclosiloxanes[j]); fflush(stdout);
                             calibrant_list[n_calibrants].mz = cyclosiloxanes[j];
                             calibrant_list[n_calibrants].peak = mzpeaks->mzs[i];
                             calibrant_list[n_calibrants].intensity = mzpeaks->intensities[i];
@@ -296,7 +300,7 @@ void makeCalibrantList(int scan, pscan_peaks mzpeaks, peptideset* peptide_set, m
 		}
             }     
 	}
-        printf("\n\t%i peaks are below background intensity threshold.", k); fflush(stdout);
+        //printf("\n\t%i peaks are below background intensity threshold.", k); fflush(stdout);
         //sorts the calibrant_list of the spectrum w.r.t. peak intensities
         qsort(calibrant_list, n_calibrants, sizeof(calibrant), sort_type_comp_inv_int);
 }
@@ -444,9 +448,9 @@ void applyCalibration(int scan, pscan_peaks mzpeaks)
 {
 	int j;	
 
-	printf("\tFinal calibration for scan %i:\n", scan);
+	//printf("\tFinal calibration for scan %i:\n", scan);
 	for(j=0;j<n_calibrants;j++) {
-		printf("\t%f %f %f %.4f\n", calibrant_list[j].peak, calibrant_list[j].mz, mz_recal(calibrant_list[j].peak), 1e6*(mz_recal(calibrant_list[j].peak)-calibrant_list[j].mz)/calibrant_list[j].mz); 
+		//printf("\t%f %f %f %.4f\n", calibrant_list[j].peak, calibrant_list[j].mz, mz_recal(calibrant_list[j].peak), 1e6*(mz_recal(calibrant_list[j].peak)-calibrant_list[j].mz)/calibrant_list[j].mz);
 		fflush(stdout);
 	}// for		
 
