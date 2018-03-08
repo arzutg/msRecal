@@ -379,67 +379,129 @@ int sort_type_comp_inv_err(const void *i, const void *j)
 
 }// int comp(const void *i, const void *j)
 
-int recalibratePeaks(msrecal_params* params){
-        int status, SATISFIED, j;
+int recalibratePeaks(msrecal_params* params, int mass_analyzer){
+    int status, SATISFIED, j;
         
-        const gsl_multifit_fdfsolver_type *T;
+    const gsl_multifit_fdfsolver_type *T;
 	gsl_multifit_fdfsolver *s;
-	double chi;
+	double chi, chi_2;
         
-        size_t iter=0;
+    size_t iter=0;
 	const size_t pp=2; /* number of free parameters in calibration function */
+	const size_t opt=-3; /* degree in calibration function */
 	double y[MAX_CALIBRANTS];
 	double mz2[MAX_CALIBRANTS];
 	struct data d={y,mz2};
 	double x_init[2]={1.0,0.0}; /* start here, close to minimum if reasonably calibrated beforehand */
         
-        gsl_multifit_function_fdf func;
-        gsl_vector_view x=gsl_vector_view_array(x_init,pp);
-        func.f = &calib_f;
-        func.df = &calib_df;
+    gsl_multifit_function_fdf func;
+    gsl_vector_view x=gsl_vector_view_array(x_init,pp);
+    func.f = &calib_f;
+    func.df = &calib_df;
 	func.fdf = &calib_fdf;
-        
-        SATISFIED=0;
-        while (n_calibrants >=params->min_cal && !SATISFIED) {
-            /* least-squares fit first using all peaks, than removing those that don't fit */
-            for (j=0;j<n_calibrants;j++) {
-                d.y[j] = 1 / calibrant_list[j].peak;
-		d.mz2[j] = calibrant_list[j].mz;
-            }// for
-            
-            iter=0;
-            T = gsl_multifit_fdfsolver_lmder;
-            s = gsl_multifit_fdfsolver_alloc (T, n_calibrants, pp); /* pp = 2 parameters, Ca and Cb */
-            func.n = n_calibrants;
-            func.p = pp;
-            func.params = &d;
-            gsl_multifit_fdfsolver_set(s,&func,&x.vector);
-            
-            do { 
-		iter++;
-		status = gsl_multifit_fdfsolver_iterate (s);
 
-		if (status) 
-                    break;
-		status=gsl_multifit_test_delta (s->dx, s->x, 1e-9, 1e-9);
-            } while (status==GSL_CONTINUE && iter<500);
+
+        SATISFIED=0;
+        if (mass_analyzer == 0){
+        	while (n_calibrants >=params->min_cal && !SATISFIED) {
+            /* least-squares fit first using all peaks, than removing those that don't fit */
+        		for (j=0;j<n_calibrants;j++) {
+        			d.y[j] = 1 / calibrant_list[j].peak;
+        			d.mz2[j] = calibrant_list[j].mz;
+        		}// for
+            
+        		iter=0;
+        		T = gsl_multifit_fdfsolver_lmder;
+        		s = gsl_multifit_fdfsolver_alloc (T, n_calibrants, pp, opt); /* pp = 2 parameters, Ca and Cb */
+        		func.n = n_calibrants;
+        		func.p = pp;
+        		func.nevaldf = opt;
+        		func.params = &d;
+        		gsl_multifit_fdfsolver_set(s,&func,&x.vector);
+            
+        		do {
+        			iter++;
+        			status = gsl_multifit_fdfsolver_iterate (s);
+
+        			if (status)
+        				break;
+        			status=gsl_multifit_test_delta (s->dx, s->x, 1e-9, 1e-9);
+        		} while (status==GSL_CONTINUE && iter<500);
  
-            Ca = gsl_vector_get(s->x,0); 
-            Cb = gsl_vector_get(s->x,1);
-            chi = gsl_blas_dnrm2(s->f);
-            gsl_multifit_fdfsolver_free(s);
+        		Ca = gsl_vector_get(s->x,1);
+        		Cb = gsl_vector_get(s->x,2);
+        		chi = gsl_blas_dnrm2(s->f);
+        		chi_2 = gsl_blas_dnrm2(s->dx);
+        		gsl_multifit_fdfsolver_free(s);
             
-            /* OK, that was one internal recalibration, now lets check if all calibrants are < INTERNAL_CALIBRATION_TARGET, if not, throw these out */
-            /* and recalibrate (as long as we have at least three peaks) */
-            qsort(calibrant_list, n_calibrants, sizeof(calibrant), sort_type_comp_inv_err);
+        		/* OK, that was one internal recalibration, now lets check if all calibrants are < INTERNAL_CALIBRATION_TARGET, if not, throw these out */
+        		/* and recalibrate (as long as we have at least three peaks) */
+        		qsort(calibrant_list, n_calibrants, sizeof(calibrant), sort_type_comp_inv_err);
             
-            for(j=n_calibrants-1; j>=0; j--)  
-		if (fabs((calibrant_list[j].mz-mz_recal(calibrant_list[j].mz))/calibrant_list[j].mz)<INTERNAL_CALIBRATION_TARGET) 
-                    break;			
-            if (j==n_calibrants-1) 
-                SATISFIED=1; /* all calibrants < INTERNAL_CALIBRATION_TARGET (e.g. 2.5 ppm) */
-            n_calibrants=j+1; /* remove calibrants that doesn't fit CAL2 better than e.g. 2 ppm */   
-        }
+        		for(j=n_calibrants-1; j>=0; j--)
+        			if (fabs((calibrant_list[j].mz-mz_recal(calibrant_list[j].mz))/calibrant_list[j].mz)<params->target_mme)
+        				break;
+        			if (j==n_calibrants-1)
+        				SATISFIED=1; /* all calibrants < INTERNAL_CALIBRATION_TARGET (e.g. 2.5 ppm) */
+        			n_calibrants=j+1; /* remove calibrants that doesn't fit CAL2 better than e.g. 2 ppm */
+        	}
+	}
+
+	else if (mass_analyzer == 1){
+		 while (n_calibrants >=params->min_cal && !SATISFIED) {
+		            /* least-squares fit first using all peaks, than removing those that don't fit */
+			 for (j=0;j<n_calibrants;j++) {
+		        d.y[j] = 1 / calibrant_list[j].peak;
+				d.mz2[j] = calibrant_list[j].mz;
+		            }// for
+
+		            iter=0;
+		            T = gsl_multifit_fdfsolver_lmder;
+		            s = gsl_multifit_fdfsolver_alloc (T, n_calibrants, pp); /* pp = 2 parameters, Ca and Cb */
+		            func.n = n_calibrants;
+		            func.p = pp;
+		            func.params = &d;
+		            gsl_multifit_fdfsolver_set(s,&func,&x.vector);
+
+		            do {
+				iter++;
+				status = gsl_multifit_fdfsolver_iterate (s);
+
+				if (status)
+					break;
+				status=gsl_multifit_test_delta (s->x, s->x, 1e-9, 1e-9);
+		            } while (status==GSL_CONTINUE && iter<500);
+
+		            Ca = gsl_vector_get(s->x,0);
+		            Cb = gsl_vector_get(s->x,1);
+		            chi = gsl_blas_dnrm2(s->f,2);
+		            chi_2 = gsl_blas_dnrm2(s->f,3);
+		            gsl_multifit_fdfsolver_free(s);
+
+		            /* OK, that was one internal recalibration, now lets check if all calibrants are < INTERNAL_CALIBRATION_TARGET, if not, throw these out */
+		            /* and recalibrate (as long as we have at least three peaks) */
+		            qsort(calibrant_list, n_calibrants, sizeof(calibrant), sort_type_comp_inv_err);
+
+		            for(j=n_calibrants-1; j>=0; j--)
+				if (fabs((calibrant_list[j].mz-mz_recal(calibrant_list[j].mz))/calibrant_list[j].mz)<params->target_mme)
+		                    break;
+		            if (j==n_calibrants-1)
+		                SATISFIED=1; /* all calibrants < INTERNAL_CALIBRATION_TARGET (e.g. 2.5 ppm) */
+		            n_calibrants=j+1; /* remove calibrants that doesn't fit CAL2 better than e.g. 2 ppm */
+		        }
+
+	}
+
+	else if (mass_analyzer == 2){
+		//TOF function with 3 parameters
+
+	}
+
+	else{
+		printf("Instrument type is not supported for calibration"); fflush(stdout);
+		SATISFIED = -1;
+	}
+
 
 	return SATISFIED;
 }

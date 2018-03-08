@@ -79,6 +79,10 @@ msrecal_params* readParameters(int argc, char *argv[])
 				params->upper_rel_bnd_rt = atof(p);
 			}
 
+			else if (argv[i][1]=='d') {
+				params->target_mme = atoi(p);
+			}
+
 			
 			else if (argv[i][1] == 'L'){
 				params->min_score_threshold = atof(p);

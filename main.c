@@ -30,6 +30,8 @@ int main(int argc, char *argv[]) {
     long scan;
     
     int SATISFIED;
+
+    int mass_analyzer;
      
     //Read and initialize parameters
     printf("\n>>Parameters being initialized..");
@@ -44,6 +46,7 @@ int main(int argc, char *argv[]) {
     printf("\nmzXML file: %s", params->mzxml_file);
     printf("\nOutput: %s", params->output_mzXML_file);
     printf("\nmmme: %g", params->mmme);
+    printf("\nInternal calibration target: %g", params->target_mme);
     printf("\nScore: %s", params->score_name);
     printf("\nMS scan interval: [%i , %i]", params->ms_start_scan, params->ms_end_scan);
     printf("\nCrop flag: %i", params->crop);
@@ -81,6 +84,7 @@ int main(int argc, char *argv[]) {
     printf("\n%i peptides that are potential calibrants.\n", pepnum); fflush(stdout);	
     printf("done.\n" ); fflush(stdout); //CH1
 
+
     //Reading mzXML file
     printf("\n>>Reading mzXML file %s...",params->mzxml_file); fflush(stdout);
     mzXML_file = read_mzxml_file_spectrum(params->mzxml_file, 1, 0, &params->ms_start_scan, &params->ms_end_scan);
@@ -96,14 +100,26 @@ int main(int argc, char *argv[]) {
     printf("\nMS scans within the scan window: [%i, %i] will be calibrated\n", mzXML_file->scan_id_array[params->ms_start_scan-1], mzXML_file->scan_id_array[params->ms_end_scan-1]); fflush(stdout);
     printf("\ndone.\n" ); fflush(stdout); //CH2
 
+    //Quick and dirty. Change the if/else to cases, make a tree structure for using ontologies
+    if(strcmp(mzXML_file->msinstrument_array->ma_value, "FT-ICR") == 0)
+    	mass_analyzer = 0; //FTICR
+    else if(strcmp(mzXML_file->msinstrument_array->ma_value, "orbitrap") == 0)
+    	mass_analyzer = 1; //Orbitrap
+    else if(strcmp(mzXML_file->msinstrument_array->ma_value, "quadrupole") == 0){
+    	if(strcmp(mzXML_file->msinstrument_array->mod_value, "Q Exactive") == 0)
+    		mass_analyzer = 1; //Orbitrap
+    	else
+    		mass_analyzer = 4; //Quarupole
+    }
+    else if(strcmp(mzXML_file->msinstrument_array->ma_value, "quadrupole") == 0)
+    	mass_analyzer = 3; //Time of flight
+
     printf("\n>>Making internal calibrant candidate list for each scan within the retention time window...\n"); fflush(stdout);
 
     build_internal_calibrants(mzXML_file, peptide_set, pepnum, params);
 
     //check the print within this function
     printf("done.\n"); fflush(stdout); //CH3
-
-    /*
 
     printf("\n>>Constructing the final calibrant list for each scan and recalibrating the peaks..."); fflush(stdout);
 
@@ -139,17 +155,17 @@ int main(int argc, char *argv[]) {
         } //CH4
 
         // Make the list of calibrants for this spectrum and sort them in descending order of intensity  
-        //printf("\n\t>>>Making the final calibrant list for the spectrum..."); fflush(stdout);
+        printf("\n\t>>>Making the final calibrant list for the spectrum..."); fflush(stdout);
         makeCalibrantList(scan, &mzpeaks, peptide_set, params);
 
         //printf("\n\t>>>Recalibrating peaks..."); fflush(stdout); //CH5
-        // Recalibrate peaks
-        SATISFIED = recalibratePeaks(params);
+        //Recalibrate peaks
+        SATISFIED = recalibratePeaks(params, mass_analyzer);
        
         if (SATISFIED) {
             printf("\n1"); fflush(stdout);
-            //applyCalibration(scan, &mzpeaks);	//CH6
-            //update_scan_peaks(mzXML_file, scan, mzpeaks.count, 32, mzpeaks.mzs, mzpeaks.intensities); //CH7
+            applyCalibration(scan, &mzpeaks);	//CH6
+            update_scan_peaks(mzXML_file, scan, mzpeaks.count, 32, mzpeaks.mzs, mzpeaks.intensities); //CH7
         }// if
         else {
             printf("\n0"); fflush(stdout);
@@ -160,12 +176,12 @@ int main(int argc, char *argv[]) {
 
     }
     
-    /*
+
     printf("done.\n\n>>Writing recalibrated mzXML file to destination %s...", params->output_mzXML_file); fflush(stdout);
     write_mzxml_file(mzXML_file, params->output_mzXML_file);
-    */
+
     printf("\ndone.\n"); fflush(stdout);
-    
+
     return 0;	
     
 }

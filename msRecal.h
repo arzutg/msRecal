@@ -41,6 +41,7 @@ typedef struct msrecal_param_type
 	double upper_rel_bnd_rt;	// upper rt window boundary
 	double recal_offset;		// right rt window boundary
 	double mmme;			// max mass measurement error 	
+	double target_mme		// internal calibration target
 
 	char* score_name;		// the name of the score parameter 
 	double min_score_threshold;	// min score filter 
@@ -96,7 +97,7 @@ double mz_recal(double peak);
 
 int sort_type_comp_inv_err(const void *i, const void *j);
 
-int recalibratePeaks(msrecal_params* params);
+int recalibratePeaks(msrecal_params* params, mass_analyzer);
 
 void applyCalibration(int scan, pscan_peaks mzpeaks);
 
